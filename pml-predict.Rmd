@@ -1,0 +1,100 @@
+---
+title: "Predicting Fitness Effectiveness"
+author: "Anil Bhat"
+date: "July 16, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+library(caret)
+library(stats)
+library(utils)
+library(xtable)
+```
+
+## Background
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this report, we used data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
+
+## Synopsis
+In this project, we generate three different prediction models using the given training data, and predict the outcome (classe variable) using 20 test cases. We then determine the accuracy of each model and compare predictions. The value of the classe variable quanitifes how well a participant does the activity.    
+
+## Detailed Analysis
+Steps:  
+1. Read the training and testing data files (Note: Blanks and Divide by Zero are treated as NA)  
+2. Clean the data. See impute_mean function.  
+3. Remove columns with no variability  
+4. Initialize modeling parameters
+```{r data_preprocess}
+impute_mean <- function(v) {
+# This function imputes the values for cells with NA values
+  if (sum(is.na(v)) > 0 && class(v) %in% c("numeric", "integer") && sum(!is.na(v)) > 0) {
+    # If the vector is numeric or integer, and has at least one non-NA value, calculate the mean
+    # of the vector and replace the NA value
+    mn <- mean(v, na.rm = TRUE)
+    v[is.na(v)] <- mn
+  } else {
+    # If all the values in the vector are NA, set them to 0
+    if (sum(complete.cases(v)) == 0) v <- v[!complete.cases(v)] <- 0
+  }
+  return(v)
+}
+
+# Read the files
+ex_train <- read.csv("C:/Users/anbhat/Documents/Anil/Coursera Data Science Specialization/Machine Learning/pml-training.csv", na.strings = c("", "#DIV/0!", "NA"))
+ex_test <- read.csv("C:/Users/anbhat/Documents/Anil/Coursera Data Science Specialization/Machine Learning/pml-testing.csv", na.strings = c("", "#DIV/0!", "NA"))
+
+# Impute values for cells with NA values
+for(i in 1:ncol(ex_train)) { 
+  ex_train[,i] <- impute_mean(ex_train[,i])
+  ex_test[,i] <- impute_mean(ex_test[,i])
+}
+
+# Exclude columns with near-zero variance
+nzv <- nearZeroVar(ex_train)
+ex_train <- ex_train[, -nzv]
+ex_test <- ex_test[, -nzv]
+
+# Set modeling parameters
+set.seed(1234)
+my_control <- trainControl(method = "cv", number = 5)
+```
+
+4. Run three models on the training set: Parallel Random Forest (RF), Gradient Boosting Machine (GBM), Linear Determinant Analysis (LDA)
+```{r run_models, results='hide', message=FALSE}
+modFit1 <- train(classe ~ ., data = ex_train, method = "parRF", preProcess = "pca", ntree = 250, trControl = my_control)
+modFit2 <- train(classe ~ ., data = ex_train, method = "gbm" , preProcess = "pca", trControl = my_control)
+modFit3 <- train(classe ~ ., data = ex_train, method = "lda", preProcess = "pca", trControl = my_control)
+```
+
+5. Predict the outcome for each test case  
+```{r predict}
+pred1 <- predict(modFit1, newdata = ex_test)
+pred2 <- predict(modFit2, newdata = ex_test)
+pred3 <- predict(modFit3, newdata = ex_test)
+print(pred1)
+print(pred2)
+print(pred3)
+```
+
+6. Print the model info
+```{r print_model}
+print(modFit1)
+print(modFit2)
+print(modFit3)
+```
+It looks like the RF model is much more accurate compared with the other two. Now, let's compare the predictions.  
+7A. Compare the RF and GBM predictions
+```{r compare1}
+table(pred1, pred2)
+```
+Here's how to read this table: Out of the 20 test cases, there were 4 instances when the RF model predicted the outcome B, but the GBM model predicted A. In addition, there were 2 instances when the RF model predicted the outcome E, but the GBM model predicted B.  
+
+7B. Compare the RF and LDA predictions
+```{r compare2}
+table(pred1, pred3)
+```
+Comparing the two tables above, the RF-LDA table shows more deviations than those in the RF-GBM table.  
+
+## Conclusion
+In the absence of the classe variable in the testing file, the Random Forest model is recommended for predicting the outcome.  
