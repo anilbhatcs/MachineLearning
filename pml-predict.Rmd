@@ -98,7 +98,7 @@ It looks like the RF model is much more accurate compared with the other two. No
 ```{r compare1}
 table(pred1, pred2)
 ```
-Here's how to read this table: Out of the 20 test cases, there were 4 instances when the RF model predicted the outcome B, but the GBM model predicted A. In addition, there were 2 instances when the RF model predicted the outcome E, but the GBM model predicted B.  
+The predictions of both RF and GBM models match except for two instances.
 
 8B. Compare the RF and LDA predictions
 ```{r compare2}
