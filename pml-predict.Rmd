@@ -55,12 +55,16 @@ nzv <- nearZeroVar(ex_train)
 ex_train <- ex_train[, -nzv]
 ex_test <- ex_test[, -nzv]
 
+# Remove columns that are of no use for building a model
+ex_train <- ex_train[, -c(1:5)]
+ex_test <- ex_test[, -c(1:5)]
+
 # Set modeling parameters
 set.seed(1234)
 my_control <- trainControl(method = "cv", number = 5)
 ```
 
-4. Run three models on the training set: Parallel Random Forest (RF), Gradient Boosting Machine (GBM), Linear Determinant Analysis (LDA)
+4. Run three models on the training set: Parallel Random Forest (RF), Gradient Boosting Machine (GBM), Linear Determinant Analysis (LDA). Use Principal Component Analysis for pre-processing.
 ```{r run_models, results='hide', message=FALSE}
 modFit1 <- train(classe ~ ., data = ex_train, method = "parRF", preProcess = "pca", ntree = 250, trControl = my_control)
 modFit2 <- train(classe ~ ., data = ex_train, method = "gbm" , preProcess = "pca", trControl = my_control)
@@ -83,14 +87,20 @@ print(modFit1)
 print(modFit2)
 print(modFit3)
 ```
-It looks like the RF model is much more accurate compared with the other two. Now, let's compare the predictions.  
-7A. Compare the RF and GBM predictions
+It looks like the RF model is much more accurate compared with the other two. Now, let's compare the predictions.   
+
+7. Calculate the out of sample error rate for the RF model
+```{r error_rate}
+1-modFit1$results$Accuracy[1]
+```
+
+8A. Compare the RF and GBM predictions
 ```{r compare1}
 table(pred1, pred2)
 ```
 Here's how to read this table: Out of the 20 test cases, there were 4 instances when the RF model predicted the outcome B, but the GBM model predicted A. In addition, there were 2 instances when the RF model predicted the outcome E, but the GBM model predicted B.  
 
-7B. Compare the RF and LDA predictions
+8B. Compare the RF and LDA predictions
 ```{r compare2}
 table(pred1, pred3)
 ```

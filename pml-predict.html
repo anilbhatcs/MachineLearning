@@ -168,11 +168,15 @@ nzv &lt;- nearZeroVar(ex_train)
 ex_train &lt;- ex_train[, -nzv]
 ex_test &lt;- ex_test[, -nzv]
 
+# Remove columns that are of no use for building a model
+ex_train &lt;- ex_train[, -c(1:5)]
+ex_test &lt;- ex_test[, -c(1:5)]
+
 # Set modeling parameters
 set.seed(1234)
 my_control &lt;- trainControl(method = &quot;cv&quot;, number = 5)</code></pre>
 <ol start="4" style="list-style-type: decimal">
-<li>Run three models on the training set: Parallel Random Forest (RF), Gradient Boosting Machine (GBM), Linear Determinant Analysis (LDA)</li>
+<li>Run three models on the training set: Parallel Random Forest (RF), Gradient Boosting Machine (GBM), Linear Determinant Analysis (LDA). Use Principal Component Analysis for pre-processing.</li>
 </ol>
 <pre class="r"><code>modFit1 &lt;- train(classe ~ ., data = ex_train, method = &quot;parRF&quot;, preProcess = &quot;pca&quot;, ntree = 250, trControl = my_control)
 modFit2 &lt;- train(classe ~ ., data = ex_train, method = &quot;gbm&quot; , preProcess = &quot;pca&quot;, trControl = my_control)
@@ -184,13 +188,13 @@ modFit3 &lt;- train(classe ~ ., data = ex_train, method = &quot;lda&quot;, prePr
 pred2 &lt;- predict(modFit2, newdata = ex_test)
 pred3 &lt;- predict(modFit3, newdata = ex_test)
 print(pred1)</code></pre>
-<pre><code>##  [1] B A A A A E D B A A B B B A E E A B B B
+<pre><code>##  [1] B A C A A E D B A A B C B A E E A B B B
 ## Levels: A B C D E</code></pre>
 <pre class="r"><code>print(pred2)</code></pre>
-<pre><code>##  [1] A A A A A B D A A A A A B A B E A B B B
+<pre><code>##  [1] C A C A A E D D A A B C B A E E A B B B
 ## Levels: A B C D E</code></pre>
 <pre class="r"><code>print(pred3)</code></pre>
-<pre><code>##  [1] A A A A A C C B A A A A B A B B A A A B
+<pre><code>##  [1] D A A A A C D D A C A A E A E B A D A B
 ## Levels: A B C D E</code></pre>
 <ol start="6" style="list-style-type: decimal">
 <li>Print the model info</li>
@@ -199,19 +203,19 @@ print(pred1)</code></pre>
 <pre><code>## Parallel Random Forest 
 ## 
 ## 19622 samples
-##    58 predictor
+##    53 predictor
 ##     5 classes: 'A', 'B', 'C', 'D', 'E' 
 ## 
-## Pre-processing: principal component signal extraction (80), centered
-##  (80), scaled (80) 
+## Pre-processing: principal component signal extraction (53), centered
+##  (53), scaled (53) 
 ## Resampling: Cross-Validated (5 fold) 
 ## Summary of sample sizes: 15698, 15696, 15698, 15699, 15697 
 ## Resampling results across tuning parameters:
 ## 
 ##   mtry  Accuracy   Kappa    
-##    2    0.9906227  0.9881378
-##   41    0.9816527  0.9767907
-##   80    0.9831306  0.9786607
+##    2    0.9802263  0.9749849
+##   27    0.9723784  0.9650544
+##   53    0.9720728  0.9646669
 ## 
 ## Accuracy was used to select the optimal model using  the largest value.
 ## The final value used for the model was mtry = 2.</code></pre>
@@ -219,25 +223,25 @@ print(pred1)</code></pre>
 <pre><code>## Stochastic Gradient Boosting 
 ## 
 ## 19622 samples
-##    58 predictor
+##    53 predictor
 ##     5 classes: 'A', 'B', 'C', 'D', 'E' 
 ## 
-## Pre-processing: principal component signal extraction (80), centered
-##  (80), scaled (80) 
+## Pre-processing: principal component signal extraction (53), centered
+##  (53), scaled (53) 
 ## Resampling: Cross-Validated (5 fold) 
-## Summary of sample sizes: 15699, 15698, 15697, 15697, 15697 
+## Summary of sample sizes: 15698, 15697, 15697, 15698, 15698 
 ## Resampling results across tuning parameters:
 ## 
 ##   interaction.depth  n.trees  Accuracy   Kappa    
-##   1                   50      0.7507401  0.6836359
-##   1                  100      0.8090912  0.7583289
-##   1                  150      0.8393123  0.7966240
-##   2                   50      0.8362553  0.7928931
-##   2                  100      0.8867597  0.8567341
-##   2                  150      0.9137702  0.8909004
-##   3                   50      0.8730508  0.8394084
-##   3                  100      0.9202933  0.8991570
-##   3                  150      0.9429207  0.9277905
+##   1                   50      0.5705321  0.4488526
+##   1                  100      0.6271517  0.5251912
+##   1                  150      0.6545704  0.5612034
+##   2                   50      0.6607881  0.5685343
+##   2                  100      0.7221986  0.6478729
+##   2                  150      0.7603702  0.6966816
+##   3                   50      0.7144013  0.6376554
+##   3                  100      0.7811635  0.7229577
+##   3                  150      0.8197427  0.7719588
 ## 
 ## Tuning parameter 'shrinkage' was held constant at a value of 0.1
 ## 
@@ -249,37 +253,42 @@ print(pred1)</code></pre>
 <pre><code>## Linear Discriminant Analysis 
 ## 
 ## 19622 samples
-##    58 predictor
+##    53 predictor
 ##     5 classes: 'A', 'B', 'C', 'D', 'E' 
 ## 
-## Pre-processing: principal component signal extraction (80), centered
-##  (80), scaled (80) 
+## Pre-processing: principal component signal extraction (53), centered
+##  (53), scaled (53) 
 ## Resampling: Cross-Validated (5 fold) 
-## Summary of sample sizes: 15698, 15697, 15697, 15698, 15698 
+## Summary of sample sizes: 15696, 15698, 15698, 15698, 15698 
 ## Resampling results:
 ## 
 ##   Accuracy   Kappa    
-##   0.8341144  0.7905396</code></pre>
-<p>It looks like the RF model is much more accurate compared with the other two. Now, let’s compare the predictions.<br />
-7A. Compare the RF and GBM predictions</p>
+##   0.5335351  0.4094578</code></pre>
+<p>It looks like the RF model is much more accurate compared with the other two. Now, let’s compare the predictions.</p>
+<ol start="7" style="list-style-type: decimal">
+<li>Calculate the out of sample error rate for the RF model</li>
+</ol>
+<pre class="r"><code>1-modFit1$results$Accuracy[1]</code></pre>
+<pre><code>## [1] 0.01977373</code></pre>
+<p>8A. Compare the RF and GBM predictions</p>
 <pre class="r"><code>table(pred1, pred2)</code></pre>
 <pre><code>##      pred2
 ## pred1 A B C D E
-##     A 8 0 0 0 0
-##     B 4 4 0 0 0
-##     C 0 0 0 0 0
+##     A 7 0 0 0 0
+##     B 0 5 1 1 0
+##     C 0 0 2 0 0
 ##     D 0 0 0 1 0
-##     E 0 2 0 0 1</code></pre>
+##     E 0 0 0 0 3</code></pre>
 <p>Here’s how to read this table: Out of the 20 test cases, there were 4 instances when the RF model predicted the outcome B, but the GBM model predicted A. In addition, there were 2 instances when the RF model predicted the outcome E, but the GBM model predicted B.</p>
-<p>7B. Compare the RF and LDA predictions</p>
+<p>8B. Compare the RF and LDA predictions</p>
 <pre class="r"><code>table(pred1, pred3)</code></pre>
 <pre><code>##      pred3
 ## pred1 A B C D E
-##     A 8 0 0 0 0
-##     B 5 3 0 0 0
-##     C 0 0 0 0 0
-##     D 0 0 1 0 0
-##     E 0 2 1 0 0</code></pre>
+##     A 6 0 1 0 0
+##     B 2 1 0 3 1
+##     C 2 0 0 0 0
+##     D 0 0 0 1 0
+##     E 0 1 1 0 1</code></pre>
 <p>Comparing the two tables above, the RF-LDA table shows more deviations than those in the RF-GBM table.</p>
 </div>
 <div id="conclusion" class="section level2">
